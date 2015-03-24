@@ -5,8 +5,9 @@
 #include "platform.h"
 #include "mxchipWNET.h"
 
-#include "sta.h"
 #include "common.h"
+#include "sta.h"
+#include "msg_handle.h"
 
 #include "udp_server.h"
 #include "tcp_server.h"
@@ -24,6 +25,8 @@ struct __sta {
 
 	char ssid[SSID_LEN + 1];
 	char passwd[PASSWD_LEN + 1];
+
+	char tx_buf[TX_BUF_SIZE];
 };
 
 static struct __sta sta;
@@ -132,11 +135,12 @@ int sta_change_status(int is_up, net_para_st *np)
 int sta_state_machine(void)
 {
 	struct __sta *s = &sta;
-	char *buf;
-	int len;
+	char *rx_buf;
+	int rx_len;
 	char *peer_ip;
 	int peer_port;
 	struct tcp_client *c;
+	int tx_len = TX_BUF_SIZE;
 
 	if (s->try_to_connect) {
 		if (sta_is_up())
@@ -168,13 +172,14 @@ int sta_state_machine(void)
 	}
 
 	/* udp server */
-	if (udp_server_recv_data(us, &buf, &len, &peer_ip, &peer_port)) {
-		udp_server_send_data(us, peer_ip, peer_port, "OK", strlen("OK"));
+	if (udp_server_recv_data(us, &rx_buf, &rx_len, &peer_ip, &peer_port)) {
+		if (msg_dispatch(rx_buf, rx_len, s->tx_buf, &tx_len))
+			udp_server_send_data(us, peer_ip, peer_port, s->tx_buf, tx_len);
 	}
 
 	/* tcp server */
 	while (1) {
-		c = tcp_server_recv_data(ts, &buf, &len, &peer_ip, &peer_port);
+		c = tcp_server_recv_data(ts, &rx_buf, &rx_len, &peer_ip, &peer_port);
 		if (!c)
 			break;
 

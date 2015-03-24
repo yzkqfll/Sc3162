@@ -10,6 +10,14 @@
 #define PREFIX_CNTL "$$$CNTL$$$"
 #define PREFIX_IR   "$$$IR$$$"
 
+#define MSG_MAGIC 0x9527abcd
+
+struct msg_header {
+	unsigned int magic;
+	unsigned char msg_type;
+	unsigned char msg_subtype;
+};
+
 int msg_dispatch(char *rx_buf, int rx_len, char *ret_buf, int *ret_len)
 {
 	if (strncmp(rx_buf, PREFIX_CNTL, strlen(PREFIX_CNTL)) == 0) {
