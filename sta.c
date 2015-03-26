@@ -183,8 +183,6 @@ int sta_state_machine(void)
 		if (!c)
 			break;
 
-		//msg_dispatch(sn->rx_buf, cnt, sn->tx_buf, &sn->tx_buf_len);
-
 		tcp_server_send_data(ts, c, "OK", strlen("OK"));
 	}
 

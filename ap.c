@@ -8,7 +8,7 @@
 #include "common.h"
 #include "ap.h"
 #include "sta.h"
-
+#include "msg_handle.h"
 #include "udp_server.h"
 
 #define MODULE "[ap] "
@@ -21,10 +21,6 @@
 
 #define LISTEN_PORT 9527
 
-#define MSG_PREFIX "###"
-#define MSG_DELIMITER ':'
-#define MSG_END '$'
-
 struct __ap {
 	char ssid[SSID_LEN + 1];
 	char passwd[PASSWD_LEN + 1];
@@ -36,6 +32,8 @@ struct __ap {
 
 	int is_up;
 	int is_opening;
+
+	char tx_buf[TX_BUF_SIZE];
 };
 
 static struct __ap ap;
@@ -136,12 +134,13 @@ int ap_close(void)
 
 int ap_state_machine(void)
 {
+	struct __ap *a = &ap;
 	int ret = 0;
-	char *buf;
-	int len;
+	char *rx_buf;
+	int rx_len;
 	char *peer_ip;
 	int peer_port;
-	char *ssid, *passwd, *separator, *end;
+	int tx_len = TX_BUF_SIZE;
 
 	if (!ap_is_up()) {
 		ret = ap_open();
@@ -159,31 +158,11 @@ int ap_state_machine(void)
 		}
 	}
 
-	if (udp_server_recv_data(us, &buf, &len, &peer_ip, &peer_port)) {
-		if (strncmp(buf, MSG_PREFIX, strlen(MSG_PREFIX))) {
-			printf(MODULE "prefix should be %s\r\n", MSG_PREFIX);
-			return 0;
-		}
+	if (udp_server_recv_data(us, &rx_buf, &rx_len, &peer_ip, &peer_port)) {
+		msg_dispatch(rx_buf, rx_len, a->tx_buf, &tx_len);
 
-		ssid = buf + strlen(MSG_PREFIX);
-		separator = strchr(ssid, MSG_DELIMITER);
-		if (!separator) {
-			printf(MODULE "format error, shoule be ###ssid:passwd$\n");
-			return 0;
-		}
-		*separator = '\0';
-		passwd = separator + 1;
-
-		end = strchr(passwd, MSG_END);
-		if (!end) {
-			printf(MODULE "format error, shoule be ssid:passwd$\n");
-			return 0;
-		}
-		*end = '\0';
-
-		sta_connect_to_ap(ssid, passwd);
-
-		udp_server_send_data(us, peer_ip, peer_port, "OK", strlen("OK"));
+		if (tx_len)
+			udp_server_send_data(us, peer_ip, peer_port, a->tx_buf, tx_len);
 	}
 
 	return ret;

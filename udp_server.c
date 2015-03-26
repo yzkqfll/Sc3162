@@ -1,3 +1,5 @@
+test
+
 #include "stdio.h"
 #include "ctype.h"
 
@@ -32,10 +34,20 @@ static int us_recv_data(struct udp_server *us)
 	us->peer_port = addr.s_port;
 
 #ifdef DEBUG
-	us->rx_buf[cnt] = '\0';
-	printf("%s [%s:%d] get msg from [%s:%d] <%s>, cnt %d\r\n", us->name,
-			us->server_ip, us->listen_port,
-			us->peer_ip, us->peer_port, us->rx_buf, cnt);
+	{
+		int i;
+
+		us->rx_buf[cnt] = '\0';
+		printf("%s [%s:%d] get msg from [%s:%d], cnt %d\r\n", us->name,
+				us->server_ip, us->listen_port,
+				us->peer_ip, us->peer_port,
+//				us->rx_buf,
+				cnt);
+		for (i = 0; i < cnt; i++) {
+			printf("%x ",  us->rx_buf[i]);
+		}
+		printf("\n");
+	}
 #endif
 
 	return 0;
