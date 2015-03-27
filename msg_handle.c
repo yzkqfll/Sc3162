@@ -7,6 +7,7 @@
 
 #include "common.h"
 #include "ir_control.h"
+#include "msg_handle.h"
 
 #define MODULE "[msg dispatch] "
 
@@ -54,6 +55,8 @@ int msg_dispatch(char *rx_buf, int rx_len, char *ret_buf, int *ret_len)
 			break;
 
 		default:
+			ENCAP_RET_BUFFER("Unknow Command");
+
 			break;
 	}
 
