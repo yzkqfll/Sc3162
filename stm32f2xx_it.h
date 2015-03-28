@@ -49,6 +49,7 @@ extern void systick_irq(void);
 extern int SD_ProcessIRQSrc(void);
 extern void uart_dma_irq(void);
 extern void uart_irq(void);
+extern void timing_delay_decrement(void);
 
 #ifdef __cplusplus
 }

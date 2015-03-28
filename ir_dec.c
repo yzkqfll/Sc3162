@@ -1,51 +1,38 @@
-/**
- ******************************************************************************
- * IR Decoder Implementation File
- *
- * Modifications:
- =========================================
- * 7Jan15, yue hu, created.
+/*
+ * ir decoder
  */
 #include <stdio.h>
 #include "ir_dec.h"
-#include "usart.h"
-#include "stm32f10x_conf.h"
+#include "stm32f2xx.h"
 
+#define MODULE "[ir decode] "
 
 // variables in this file
 static IR_IntInfo ir_int_info;
 
-
-/**
-  * ir rx 3pin configuration
-  * gpio-ground, gpio-vcc, gpio(tim)-data
-  */
-static void IR_Rx_GPIO_Config(void)
+static void ir_rx_gpio_config(void)
 {
     GPIO_InitTypeDef    GPIO_InitStructure;
 
-    RCC_APB2PeriphClockCmd(IR_RX_GPIO_CLK, ENABLE);
+    RCC_AHB1PeriphClockCmd(IR_RX_GPIO_CLK, ENABLE);
 
     // data pin
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Pin = IR_RX_PIN_DAT;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(IR_RX_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+    GPIO_Init(IR_RX_PORT_DAT, &GPIO_InitStructure);
 
-    // vcc and ground pin
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz ;
-    GPIO_InitStructure.GPIO_Pin = IR_RX_PIN_GND | IR_RX_PIN_VCC;
-    GPIO_Init( IR_RX_PORT, &GPIO_InitStructure);
-    GPIO_SetBits(IR_RX_PORT,  IR_RX_PIN_VCC);
-    GPIO_ResetBits(IR_RX_PORT,  IR_RX_PIN_GND);
+    // Connect TIM pins to AF
+    GPIO_PinAFConfig(IR_RX_PORT_DAT, IR_RX_PIN_DATSRC, IR_RX_PIN_AF);
 }
 
 
 /**
   * ir rx tim configuration
   */
-static void IR_Rx_TIM_Config(void)
+static void ir_rx_tim_config(void)
 {
     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
     TIM_ICInitTypeDef  TIM_ICInitStructure;
@@ -53,7 +40,6 @@ static void IR_Rx_TIM_Config(void)
     RCC_APB2PeriphClockCmd(IR_RX_TIM_CLK, ENABLE);
 
     /* Time Base configuration */
-    /* 72M/7200 = 0.1ms */
     TIM_TimeBaseStructure.TIM_Prescaler = IR_RX_TIM_TBPSC;
     TIM_TimeBaseStructure.TIM_CounterMode = IR_RX_TIM_TBCNTM;
     TIM_TimeBaseStructure.TIM_Period = IR_RX_TIM_TBPERIOD;
@@ -71,15 +57,15 @@ static void IR_Rx_TIM_Config(void)
     /* TIM enable counter */
     TIM_Cmd(IR_RX_TIM, ENABLE);
 
-    /* Enable the CC1 Interrupt Request */
-    TIM_ITConfig(IR_RX_TIM, IR_RX_TIM_IT, ENABLE);
+    /* Enable the CC1 and Up Interrupt Request */
+    TIM_ITConfig(IR_RX_TIM, TIM_IT_Update | IR_RX_TIM_IT, ENABLE);
 }
 
 /**
   * Get the ir pulse width using tim cc and up interrupt
   *
   */
-static void IR_Rx_IntService(void)
+static void ir_rx_int_service(void)
 {
     if(TIM_GetITStatus(IR_RX_TIM, IR_RX_TIM_IT) == SET) {
         TIM_ITConfig(IR_RX_TIM, TIM_IT_Update, DISABLE);
@@ -109,7 +95,7 @@ static void IR_Rx_IntService(void)
 
     } else if(TIM_GetITStatus(IR_RX_TIM, TIM_IT_Update) == SET) { //TIM overflow, its end
         if (ir_int_info.state == IR_STATE_OVERFLOW) {
-            ir_int_info.state = IR_STATE_NO;
+            //ir_int_info.state = IR_STATE_NO;
             ir_int_info.rawLen = 0;
         } else if (ir_int_info.state == IR_STATE_READ) {
             ir_int_info.state = IR_STATE_OK; //ir raw code is ok
@@ -121,63 +107,65 @@ static void IR_Rx_IntService(void)
 
 void TIM8_CC_IRQHandler(void)
 {
-    IR_Rx_IntService();
+    ir_rx_int_service();
 }
 
-void TIM8_UP_IRQHandler(void)
+void TIM8_UP_TIM13_IRQHandler(void)
 {
-    IR_Rx_IntService();
+    ir_rx_int_service();
 }
 
-static void IR_Rx_NVIC_Config(void)
+static void ir_rx_nvic_config(void)
 {
     NVIC_InitTypeDef NVIC_InitStructure;
 
-    /* Enable the TIM global Interrupt */
-    NVIC_InitStructure.NVIC_IRQChannel = IR_RX_CC_INT;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
-    /* Enable the TIM global Interrupt */
-    NVIC_InitStructure.NVIC_IRQChannel = IR_RX_UP_INT;
+    /* Enable the CC Interrupt */
+    NVIC_InitStructure.NVIC_IRQChannel = IR_RX_CC_INT;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
+
+    /* Enable the Update Interrupt */
+    NVIC_InitStructure.NVIC_IRQChannel = IR_RX_UP_INT;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
 }
 
-static void IR_Rx_State_Init(void)
+static void ir_rx_state_init(void)
 {
     ir_int_info.state = IR_STATE_NO;
-	ir_int_info.rawLen = 0;
+    ir_int_info.rawLen = 0;
 }
 
-void IR_Rx_Next(void)
+void ir_rx_next(void)
 {
-   IR_Rx_State_Init();
+    ir_rx_state_init();
 }
 
 /**
   * IR rx configurations
   */
-void IR_Rx_Config(void)
+void ir_rx_config(void)
 {
-    IR_Rx_State_Init();
-    IR_Rx_GPIO_Config();
-    IR_Rx_NVIC_Config();
-    IR_Rx_TIM_Config();
+    ir_rx_state_init();
+    ir_rx_gpio_config();
+    ir_rx_nvic_config();
+    ir_rx_tim_config();
 }
 
 /**
  * convert the raw data to binary code
  * return 1 is valid
  */
-uint32_t IR_DecodeNEC(IR_DecResult *result)
+uint32_t ir_decode_nec(IR_DecResult *result)
 {
     uint8_t i = 0;
-	uint32_t data = 0;
+    uint32_t data = 0;
 
     if ((result->rawBuf[i] > NEC_BOOT_MIN) && (result->rawBuf[i] < NEC_BOOT_MAX)) {
         for (i = 1; i < NEC_CODE_LEN; i++) {
@@ -188,8 +176,8 @@ uint32_t IR_DecodeNEC(IR_DecResult *result)
             }
         }
         result->bits = NEC_CODE_LEN;
-		result->type = IR_NEC;
-		result->value = data;
+        result->type = IR_NEC;
+        result->value = data;
         return 1;
     } else {
         return 0; //not NEC
@@ -199,38 +187,39 @@ uint32_t IR_DecodeNEC(IR_DecResult *result)
 /**
  * IR decode
  * @param  IR_DecResult *
- * @return   0 - decode raw failed
- *                1 - decode success
+ * @return  0 - decode raw failed
+ *          1 - decode success
  */
-int IR_Decode(IR_DecResult *result)
+int ir_decode(IR_DecResult *result)
 {
     if(ir_int_info.state != IR_STATE_OK)
         return 0;
 
-	result->rawBuf = ir_int_info.rawBuf;
+    result->rawBuf = ir_int_info.rawBuf;
     result->rawLen = ir_int_info.rawLen;
 
-    if(IR_DecodeNEC(result))
+    if(ir_decode_nec(result))
         return 1;
 
-	result->type = IR_UNKNOWN;
-	result->bits = 0;
-	result->value = 0;
+    result->type = IR_UNKNOWN;
+    result->bits = 0;
+    result->value = 0;
     return 1;
 }
 
 /**
  * NEC protocol:
  * three type pulse: boot pulse + logic 0 + logic 1
- * boot code + addr code + !addr + cmd + !cmd
- * the addr/cmd code is combination of 0 and 1
+ * full code: boot code + addr code + !addr + cmd + !cmd
+ * the addr and cmd code is combination of 0 and 1
  */
-void IR_Raw_Data_Print(IR_DecResult *result)
+void ir_raw_data_print(IR_DecResult *result)
 {
     int i;
 
-    printf("[RAW]Head is %d\r\n", result->rawBuf[0]);
-	printf("[RAW]user info:\r\n");
+    printf(MODULE "Raw head is %d\r\n", result->rawBuf[0]);
+    printf(MODULE "Raw buffer length is %d\r\n", result->rawLen);
+    printf(MODULE "Raw user info:\r\n");
     for(i = 1; i < result->rawLen; i++) {
         printf("%d ", result->rawBuf[i]);
         if(i % 8 == 0)
@@ -238,6 +227,5 @@ void IR_Raw_Data_Print(IR_DecResult *result)
     }
     printf("\r\n");
 }
-
 
 /*********************************END OF FILE**********************************/

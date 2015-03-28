@@ -142,6 +142,8 @@ void SysTick_Handler(void)
 {
 	systick_irq();    
 	NoOS_systick_irq();
+
+	timing_delay_decrement();
 }
 
 /******************************************************************************/
