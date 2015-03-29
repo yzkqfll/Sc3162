@@ -35,11 +35,12 @@ static int us_recv_data(struct udp_server *us)
 	{
 		int i;
 
-		us->rx_buf[cnt] = '\0';
-		printf("%s [%s:%d] get msg from [%s:%d], cnt %d\r\n", us->name,
+		if (cnt < RX_BUF_SIZE)
+			us->rx_buf[cnt] = '\0';
+		printf("%s [%s:%d]: get msg from [%s:%d] <%s>, cnt %d\r\n", us->name,
 				us->server_ip, us->listen_port,
 				us->peer_ip, us->peer_port,
-//				us->rx_buf,
+				us->rx_buf,
 				cnt);
 		for (i = 0; i < cnt; i++) {
 			printf("%x ",  us->rx_buf[i]);
@@ -61,10 +62,17 @@ static int us_send_data(struct udp_server *us)
 
 #ifdef DEBUG
 		if (us->tx_len < us->tx_buf_size) {
+			int i;
+
 			us->tx_buf[us->tx_len] = '\0';
-			printf("%s [%s:%d] send msg to [%s:%d] <%s>, cnt %d\r\n", us->name,
+			printf("%s [%s:%d]: send msg to [%s:%d] <%s>, cnt %d\r\n", us->name,
 				us->server_ip, us->listen_port,
 				us->peer_ip, us->peer_port, us->tx_buf, us->tx_len);
+
+			for (i = 0; i < us->tx_len; i++) {
+				printf("%x ",  us->tx_buf[i]);
+			}
+			printf("\n");
 		}
 #endif
 
