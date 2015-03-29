@@ -173,7 +173,9 @@ int sta_state_machine(void)
 
 	/* udp server */
 	if (udp_server_recv_data(us, &rx_buf, &rx_len, &peer_ip, &peer_port)) {
-		if (msg_dispatch(rx_buf, rx_len, s->tx_buf, &tx_len))
+		msg_dispatch(rx_buf, rx_len, s->tx_buf, &tx_len);
+
+		if (tx_len)
 			udp_server_send_data(us, peer_ip, peer_port, s->tx_buf, tx_len);
 	}
 

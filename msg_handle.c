@@ -14,7 +14,8 @@
 #define MSG_MAGIC 0x12345678
 
 enum {
-	MSG_TYPE_CONFIG_SSID = 0,
+	MSG_TYPE_SET_SSID = 1,
+	MSG_TYPE_QUERY_IP,
 	MSG_TYPE_INFRA,
 };
 
@@ -35,8 +36,7 @@ int msg_dispatch(char *rx_buf, int rx_len, char *ret_buf, int *ret_len)
 	if (h->magic != MSG_MAGIC) {
 		printf(MODULE "Error of magic:%x\n", h->magic);
 
-		memcpy(ret_buf, "Error of magic", sizeof("Error of magic"));
-		*ret_len = sizeof("Error of magic");
+		ENCAP_RET_BUFFER("Error of magic");
 		return 0;
 	}
 
@@ -44,13 +44,17 @@ int msg_dispatch(char *rx_buf, int rx_len, char *ret_buf, int *ret_len)
 	packet_len = rx_len - sizeof(struct msg_header);
 
 	switch (h->msg_type) {
-		case MSG_TYPE_CONFIG_SSID:
+		case MSG_TYPE_SET_SSID:
 			config_net(packet, packet_len, ret_buf, ret_len);
 
 			break;
 
+		case MSG_TYPE_QUERY_IP:
+			ENCAP_RET_BUFFER("Response with IP");
+			break;
+
 		case MSG_TYPE_INFRA:
-			ir_msg_handle(rx_buf, rx_len, ret_buf, ret_len);
+			ir_msg_handle(packet, packet_len, ret_buf, ret_len);
 
 			break;
 
