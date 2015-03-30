@@ -8,6 +8,9 @@
 
 #define MODULE "[ir send] "
 
+#define CONFIG_MXCHIPWNET
+
+#ifndef CONFIG_MXCHIPWNET
 static __IO uint32_t TimingDelay;
 
 void delay_us(__IO uint32_t nTime)
@@ -23,6 +26,19 @@ void timing_delay_decrement(void)
         TimingDelay--;
     }
 }
+#else
+void delay_us(uint32_t n)
+{
+    uint8_t i = 0;
+
+    while(n--) {
+        i = 12;
+        while(i--) {
+            __NOP();
+        }
+    }
+}
+#endif
 
 void ir_tx_om_set(unsigned char mode)
 {
@@ -135,10 +151,11 @@ void ir_tx_tim_config(uint8_t khz)
 
     /* the below is for tim1 or tim8 */
 #if defined(CONFIG_TIM1) || defined(CONFIG_TIM8)
-   TIM_CtrlPWMOutputs(IR_TX_TIM, ENABLE);
+    TIM_CtrlPWMOutputs(IR_TX_TIM, ENABLE);
 #endif
 }
 
+#ifndef CONFIG_MXCHIPWNET
 static void ir_tx_systick_config(void)
 {
     /* Setup SysTick Timer for 1 microsec interrupts */
@@ -148,6 +165,7 @@ static void ir_tx_systick_config(void)
         while (1);
     }
 }
+#endif
 
 static void ir_tx_rcc_config(void)
 {
@@ -164,7 +182,9 @@ static void ir_tx_gpio_config(void)
 
 void ir_tx_config(void)
 {
+#ifndef CONFIG_MXCHIPWNET
     ir_tx_systick_config();
+#endif
     ir_tx_rcc_config();
     ir_tx_gpio_config();
     ir_tx_tim_config(38); //enable 38khz
@@ -175,7 +195,7 @@ void ir_tx_config(void)
  */
 void ir_send_nec(uint32_t data, uint32_t nbits)
 {
-    unsigned char i=0;
+    unsigned char i = 0;
 
     // send code
     nec_boot(IR_TX_TIM);

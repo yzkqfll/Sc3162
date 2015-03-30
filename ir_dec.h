@@ -87,6 +87,8 @@ extern void ir_rx_config(void);
 extern int ir_decode(IR_DecResult *result);
 extern void ir_raw_data_print(IR_DecResult *result);
 extern void ir_rx_next(void);
+extern void ir_icc_enable_set(int tof);
+
 
 
 #endif/* __IR_DECODE_H */

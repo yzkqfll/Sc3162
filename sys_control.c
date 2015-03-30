@@ -8,7 +8,7 @@
 #include "common.h"
 #include "ap.h"
 #include "sta.h"
-
+#include "ir_control.h"
 
 #define MODULE "[sys cntl] "
 
@@ -24,7 +24,7 @@ int init_sys(void)
 		return -1;
 	}
 
-	//ir_init();
+	ir_init();
 
 	return 0;
 }

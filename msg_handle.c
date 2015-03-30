@@ -56,7 +56,7 @@ int msg_dispatch(char *rx_buf, int rx_len, char *ret_buf, int *ret_len)
 			break;
 
 		case MSG_TYPE_INFRA:
-			ir_msg_handle(packet, packet_len, ret_buf, ret_len);
+			ir_msg_handle(h->msg_subtype, packet, packet_len, ret_buf, ret_len);
 
 			break;
 

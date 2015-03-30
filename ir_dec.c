@@ -28,6 +28,15 @@ static void ir_rx_gpio_config(void)
     GPIO_PinAFConfig(IR_RX_PORT_DAT, IR_RX_PIN_DATSRC, IR_RX_PIN_AF);
 }
 
+void ir_icc_enable_set(int tof)
+{
+       if(tof) {
+          TIM_ITConfig(IR_RX_TIM, TIM_IT_Update | IR_RX_TIM_IT, ENABLE);
+       } else {
+	 TIM_ITConfig(IR_RX_TIM, TIM_IT_Update | IR_RX_TIM_IT, DISABLE);
+       }
+}
+
 
 /**
   * ir rx tim configuration
@@ -57,8 +66,8 @@ static void ir_rx_tim_config(void)
     /* TIM enable counter */
     TIM_Cmd(IR_RX_TIM, ENABLE);
 
-    /* Enable the CC1 and Up Interrupt Request */
-    TIM_ITConfig(IR_RX_TIM, TIM_IT_Update | IR_RX_TIM_IT, ENABLE);
+    /* Default disable the CC1 and Up Interrupt Request */
+    ir_icc_enable_set(0);
 }
 
 /**
