@@ -33,8 +33,11 @@
 #define  IR_STATE_OK        3
 
 // IR decode type
-#define IR_NEC           1
-#define IR_UNKNOWN       0
+enum {
+    IR_UNKNOWN = 0,
+    IR_NEC,
+};
+
 
 // IR decode information for the interrupt handler
 typedef struct {

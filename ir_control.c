@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include "ctype.h"
+#include "string.h"
 
 #include "stm32f2xx.h"
 #include "platform.h"
@@ -31,17 +32,26 @@ enum {
 
 static IR_DecResult idr;
 
-int ir_msg_handle_decode(void)
+int ir_msg_handle_decode(char *ret)
 {
+    char s[8];
+
     if(ir_decode(&idr)) {
-        if(idr.type == IR_NEC) {
-            ir_raw_data_print(&idr);
-            ir_rx_next();
-            return 1;
-        }
+
+        ir_raw_data_print(&idr);
+        ir_icc_enable_set(0);
         ir_rx_next();
+
+        sprintf(s, "%x", idr.value);
+        strcpy(ret, "IRDecode: ");
+        strcat(ret, s);
+
+        return idr.type;
+    } else {
+
+        ir_rx_next();
+        return -1;
     }
-    return 0;
 }
 
 int ir_msg_handle_send(char *rx_buf, int rx_len)
@@ -52,6 +62,8 @@ int ir_msg_handle_send(char *rx_buf, int rx_len)
 
 int ir_msg_handle(unsigned char msg_type, char *rx_buf, int rx_len, char *ret_buf, int *ret_len)
 {
+    char tmpstr[20];
+
     switch(msg_type) {
         case IMT_CONNECT:
             ir_printf(MODULE "-> IRConnect");
@@ -69,7 +81,10 @@ int ir_msg_handle(unsigned char msg_type, char *rx_buf, int rx_len, char *ret_bu
             break;
         case IMT_DECODE:
             ir_printf(MODULE "-> IRDecode");
-            if(ir_msg_handle_decode()) {
+            memset(tmpstr, 0, 20);
+            if(ir_msg_handle_decode(tmpstr) >= 0) {
+                ir_printf(MODULE "tmpstr %s, tmpstr_len %d\r\n", tmpstr, strlen(tmpstr));
+                //ENCAP_RET_BUFFER(tmpstr);
                 ENCAP_RET_BUFFER("IRDecode: OK");
             } else {
                 ENCAP_RET_BUFFER("IRDecode: ERR");

@@ -30,11 +30,11 @@ static void ir_rx_gpio_config(void)
 
 void ir_icc_enable_set(int tof)
 {
-       if(tof) {
-          TIM_ITConfig(IR_RX_TIM, TIM_IT_Update | IR_RX_TIM_IT, ENABLE);
-       } else {
-	 TIM_ITConfig(IR_RX_TIM, TIM_IT_Update | IR_RX_TIM_IT, DISABLE);
-       }
+    if(tof) {
+        TIM_ITConfig(IR_RX_TIM, TIM_IT_Update | IR_RX_TIM_IT, ENABLE);
+    } else {
+        TIM_ITConfig(IR_RX_TIM, TIM_IT_Update | IR_RX_TIM_IT, DISABLE);
+    }
 }
 
 
@@ -147,8 +147,13 @@ static void ir_rx_nvic_config(void)
 
 static void ir_rx_state_init(void)
 {
-    ir_int_info.state = IR_STATE_NO;
+    int i;
+
+    for(i = 0; i < IR_RAW_LEN; i++) {
+        ir_int_info.rawBuf[i] = 0;
+    }
     ir_int_info.rawLen = 0;
+    ir_int_info.state = IR_STATE_NO;
 }
 
 void ir_rx_next(void)
@@ -177,6 +182,12 @@ uint32_t ir_decode_nec(IR_DecResult *result)
     uint32_t data = 0;
 
     if ((result->rawBuf[i] > NEC_BOOT_MIN) && (result->rawBuf[i] < NEC_BOOT_MAX)) {
+
+        if(result->rawLen <  NEC_CODE_LEN) {
+            printf(MODULE "header is NEC, but raw data length(%d) is not right!!!\r\n", result->rawLen);
+            return 0; //not possible
+        }
+
         for (i = 1; i < NEC_CODE_LEN; i++) {
             if(result->rawBuf[i] > NEC_H_MIN && result->rawBuf[i] < NEC_H_MAX) {
                 data = (data << 1) | 1;
@@ -204,6 +215,8 @@ int ir_decode(IR_DecResult *result)
     if(ir_int_info.state != IR_STATE_OK)
         return 0;
 
+    printf(MODULE "ir_int_info state is ok, rawLen=%d\r\n", ir_int_info.rawLen);
+
     result->rawBuf = ir_int_info.rawBuf;
     result->rawLen = ir_int_info.rawLen;
 
@@ -213,7 +226,7 @@ int ir_decode(IR_DecResult *result)
     result->type = IR_UNKNOWN;
     result->bits = 0;
     result->value = 0;
-    return 1;
+    return 0;
 }
 
 /**
