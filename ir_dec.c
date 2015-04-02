@@ -207,21 +207,28 @@ uint32_t ir_decode_nec(IR_DecResult *result)
 /**
  * IR decode
  * @param  IR_DecResult *
- * @return  0 - decode raw failed
- *          1 - decode success
+ * @return  -1 - not capture
+ *           0 - captured and decode failed
+ *           1 - captured and decode succeed
  */
 int ir_decode(IR_DecResult *result)
 {
     if(ir_int_info.state != IR_STATE_OK)
-        return 0;
+        return -1;
 
-    printf(MODULE "ir_int_info state is ok, rawLen=%d\r\n", ir_int_info.rawLen);
+    printf(MODULE "ir_int_info state is ok, rawHeader=%d rawLen=%d\r\n",
+           ir_int_info.rawBuf[0], ir_int_info.rawLen);
 
     result->rawBuf = ir_int_info.rawBuf;
     result->rawLen = ir_int_info.rawLen;
 
     if(ir_decode_nec(result))
         return 1;
+
+    /*
+      if(ir_decode_rc5(result))
+       return 1;
+      */
 
     result->type = IR_UNKNOWN;
     result->bits = 0;
@@ -239,6 +246,7 @@ void ir_raw_data_print(IR_DecResult *result)
 {
     int i;
 
+    printf("\r\n");
     printf(MODULE "Raw head is %d\r\n", result->rawBuf[0]);
     printf(MODULE "Raw buffer length is %d\r\n", result->rawLen);
     printf(MODULE "Raw user info:\r\n");

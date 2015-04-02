@@ -32,38 +32,45 @@ enum {
 
 static IR_DecResult idr;
 
-int ir_msg_handle_decode(char *ret)
+void ir_msg_handle_decode(char *ret_buf, int *ret_len)
 {
-    char s[8];
+    char val[8] = {0};
+    int res = 0;
 
-    if(ir_decode(&idr)) {
+    res = ir_decode(&idr);
+    if(res == 1) {
 
         ir_raw_data_print(&idr);
         ir_icc_enable_set(0);
         ir_rx_next();
 
-        sprintf(s, "%x", idr.value);
-        strcpy(ret, "IRDecode: ");
-        strcat(ret, s);
+        sprintf(val, "%x", idr.value);
+        strcpy(ret_buf, "IRDecode: ");
+        strcat(ret_buf, val);
+        *ret_len = strlen(ret_buf);
 
-        return idr.type;
     } else {
 
+        if(res == 0) { //unknow
+            ir_raw_data_print(&idr);
+        }
         ir_rx_next();
-        return -1;
+        ENCAP_RET_BUFFER("IRDecode: ERR");
     }
 }
 
-int ir_msg_handle_send(char *rx_buf, int rx_len)
+void ir_msg_handle_send(char *rx_buf, int rx_len)
 {
-    return 1;
+    uint32_t key_val = 0;
+
+    //key_val = strtol(rx_buf,NULL,10);
+    printf(MODULE "rx_buf=%s, rx_len=%d,key_val=0x%x\r\n", rx_buf, rx_len, key_val);
+    ir_send_nec(key_val, 32);
 }
 
 
 int ir_msg_handle(unsigned char msg_type, char *rx_buf, int rx_len, char *ret_buf, int *ret_len)
 {
-    char tmpstr[20];
-
     switch(msg_type) {
         case IMT_CONNECT:
             ir_printf(MODULE "-> IRConnect");
@@ -81,14 +88,7 @@ int ir_msg_handle(unsigned char msg_type, char *rx_buf, int rx_len, char *ret_bu
             break;
         case IMT_DECODE:
             ir_printf(MODULE "-> IRDecode");
-            memset(tmpstr, 0, 20);
-            if(ir_msg_handle_decode(tmpstr) >= 0) {
-                ir_printf(MODULE "tmpstr %s, tmpstr_len %d\r\n", tmpstr, strlen(tmpstr));
-                //ENCAP_RET_BUFFER(tmpstr);
-                ENCAP_RET_BUFFER("IRDecode: OK");
-            } else {
-                ENCAP_RET_BUFFER("IRDecode: ERR");
-            }
+            ir_msg_handle_decode(ret_buf, ret_len) ;
             break;
         case IMT_SEND:
             ir_printf(MODULE "-> IRSend");
