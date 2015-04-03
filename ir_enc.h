@@ -27,7 +27,7 @@
 
 //extern functions
 extern void ir_tx_config(void);
-extern void ir_send_nec(uint32_t data, uint32_t nbits);
+extern void ir_send(uint8_t type, uint32_t data, uint32_t nbits);
 
 #endif
 /*********************************END OF FILE**********************************/

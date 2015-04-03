@@ -193,7 +193,7 @@ void ir_tx_config(void)
 /**
  * send nec data
  */
-void ir_send_nec(uint32_t data, uint32_t nbits)
+static void ir_send_nec(uint32_t data, uint32_t nbits)
 {
     unsigned char i = 0;
 
@@ -210,6 +210,19 @@ void ir_send_nec(uint32_t data, uint32_t nbits)
     }
 
     nec_end(IR_TX_TIM);
+}
+
+void ir_send(uint8_t type, uint32_t data, uint32_t nbits)
+{
+    switch(type) {
+        case IR_NEC:
+            printf(MODULE "send nec data 0x%x, length %d\r\n", data, nbits);
+            ir_send_nec(data, nbits);
+            break;
+        default:
+            printf(MODULE "not support!\r\n");
+            break;
+    }
 }
 
 

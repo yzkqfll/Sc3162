@@ -1,6 +1,6 @@
-#include "stdio.h"
+#include <stdio.h>
 #include "ctype.h"
-#include "string.h"
+#include <string.h>
 
 #include "stm32f2xx.h"
 #include "platform.h"
@@ -19,7 +19,7 @@ enum {
     IMT_ENABLE_INPUT_CC,
     IMT_DECODE,
     IMT_DISABLE_INPUT_CC,
-    IMT_SEND,
+    IMT_SEND_NEC,
 };
 
 #define DEBUG
@@ -59,13 +59,14 @@ void ir_msg_handle_decode(char *ret_buf, int *ret_len)
     }
 }
 
-void ir_msg_handle_send(char *rx_buf, int rx_len)
+void ir_msg_handle_send(int code_type, char *rx_buf, int rx_len)
 {
-    uint32_t key_val = 0;
+    unsigned int data = 0;
+    unsigned int nbits = (unsigned int)(rx_len * 4);
 
-    //key_val = strtol(rx_buf,NULL,10);
-    printf(MODULE "rx_buf=%s, rx_len=%d,key_val=0x%x\r\n", rx_buf, rx_len, key_val);
-    ir_send_nec(key_val, 32);
+    data = strtoul(rx_buf, NULL, 16);
+
+    ir_send(code_type, data, nbits);
 }
 
 
@@ -90,10 +91,10 @@ int ir_msg_handle(unsigned char msg_type, char *rx_buf, int rx_len, char *ret_bu
             ir_printf(MODULE "-> IRDecode");
             ir_msg_handle_decode(ret_buf, ret_len) ;
             break;
-        case IMT_SEND:
-            ir_printf(MODULE "-> IRSend");
-            ir_msg_handle_send(rx_buf, rx_len);
-            ENCAP_RET_BUFFER("IRSend: OK");
+        case IMT_SEND_NEC:
+            ir_printf(MODULE "-> IRSendNEC");
+            ir_msg_handle_send(IR_NEC, rx_buf, rx_len);
+            ENCAP_RET_BUFFER("IRSendNEC: OK");
             break;
         default:
             break;
