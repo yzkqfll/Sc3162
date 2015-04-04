@@ -143,7 +143,9 @@ void SysTick_Handler(void)
 	systick_irq();    
 	NoOS_systick_irq();
 
-//	timing_delay_decrement();
+#ifndef CONFIG_MXCHIPWNET
+	timing_delay_decrement();
+#endif
 }
 
 /******************************************************************************/

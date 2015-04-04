@@ -3,12 +3,12 @@
  */
 #include <stdio.h>
 #include "stm32f2xx.h"
+#include "main.h"
 #include "ir_enc.h"
 #include "ir_dec.h"
 
 #define MODULE "[ir send] "
 
-#define CONFIG_MXCHIPWNET
 
 #ifndef CONFIG_MXCHIPWNET
 static __IO uint32_t TimingDelay;

@@ -29,6 +29,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f2xx.h"
+#include "main.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -49,7 +50,9 @@ extern void systick_irq(void);
 extern int SD_ProcessIRQSrc(void);
 extern void uart_dma_irq(void);
 extern void uart_irq(void);
-//extern void timing_delay_decrement(void);
+#ifndef CONFIG_MXCHIPWNET
+extern void timing_delay_decrement(void);
+#endif
 
 #ifdef __cplusplus
 }

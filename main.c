@@ -1,3 +1,4 @@
+#include "main.h"
 #include "stdio.h"
 #include "ctype.h"
 
@@ -23,6 +24,10 @@ static const char *secure_type[8] = {
 	"WPA2 MIXED",
 	"Auto"
 };
+
+#ifdef CONFIG_LOCAL_IR
+extern void ir_test_menu(void);
+#endif
 
 /**
  *  Call backs
@@ -147,6 +152,10 @@ int main(void)
 	mxchipInit();
 
 	UART_Init();
+
+#ifdef CONFIG_LOCAL_IR
+        ir_test_menu();
+#endif
 	Button_Init();
 
 	printf("\r\n");
