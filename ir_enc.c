@@ -32,7 +32,7 @@ void delay_us(uint32_t n)
     uint8_t i = 0;
 
     while(n--) {
-        i = 12;
+        i = 18;
         while(i--) {
             __NOP();
         }
