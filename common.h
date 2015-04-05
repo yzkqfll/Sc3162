@@ -3,6 +3,8 @@
 
 
 #define DEBUG
+//#define DEBUG_SOCKET
+
 
 #define RX_BUF_SIZE 2 * 1024
 #define TX_BUF_SIZE 2 * 1024

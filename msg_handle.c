@@ -45,13 +45,13 @@ int msg_dispatch(char *rx_buf, int rx_len, char *ret_buf, int *ret_len)
 
 	switch (h->msg_type) {
 		case MSG_TYPE_SET_SSID:
-			printf(MODULE "-> Set SSID");
+			printf(MODULE "-> Set SSID\n");
 			config_net(packet, packet_len, ret_buf, ret_len);
 
 			break;
 
 		case MSG_TYPE_QUERY_IP:
-			printf(MODULE "-> Query IP");
+			printf(MODULE "-> Query IP\n");
 			ENCAP_RET_BUFFER("Query IP: OK");
 			break;
 
@@ -61,8 +61,8 @@ int msg_dispatch(char *rx_buf, int rx_len, char *ret_buf, int *ret_len)
 			break;
 
 		default:
-			printf(MODULE "-> Unknown CMD");
-			ENCAP_RET_BUFFER("Unknown CMD");
+			printf(MODULE "-> Unknown CMD\n");
+			ENCAP_RET_BUFFER("Unknown CMD\n");
 
 			break;
 	}

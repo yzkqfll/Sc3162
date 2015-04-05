@@ -63,7 +63,7 @@ static int ts_recv_data(struct tcp_client *c)
 	}
 	c->rx_len = cnt;
 
-#ifdef DEBUG
+#ifdef DEBUG_SOCKET
 	if (cnt < c->rx_buf_size) {
 		c->rx_buf[cnt] = '\0';  // debug only, for string msg
 		printf("%s [%s:%d] get msg from [%s:%d] fd %d: <%s>, cnt %d\r\n", ts->name,
@@ -77,10 +77,9 @@ static int ts_recv_data(struct tcp_client *c)
 
 static int ts_send_data(struct tcp_client *c)
 {
-	struct tcp_server *ts = c->ts;
-
 	if (c->tx_len > 0) {
-#ifdef DEBUG
+#ifdef DEBUG_SOCKET
+		struct tcp_server *ts = c->ts;
 		printf("%s [%s:%d] fd %d send msg to [%s:%d]: <%s>, cnt %d\r\n", ts->name,
 				ts->server_ip, ts->listen_port,
 				c->fd, c->ip, c->port, c->tx_buf, c->tx_len);

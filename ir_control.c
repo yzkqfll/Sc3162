@@ -70,33 +70,39 @@ void ir_msg_handle_send(int code_type, char *rx_buf, int rx_len)
 }
 
 
-int ir_msg_handle(unsigned char msg_type, char *rx_buf, int rx_len, char *ret_buf, int *ret_len)
+int ir_msg_handle(unsigned char ir_msg_type, char *rx_buf, int rx_len, char *ret_buf, int *ret_len)
 {
-    switch(msg_type) {
+    switch (ir_msg_type) {
         case IMT_CONNECT:
-            ir_printf(MODULE "-> IRConnect");
+            ir_printf(MODULE "-> IRConnect\n");
             ENCAP_RET_BUFFER("IRConnect: OK");
             break;
+
         case IMT_ENABLE_INPUT_CC:
-            ir_printf(MODULE "-> IREnableICC");
+            ir_printf(MODULE "-> Start IR learning\n");
             ir_icc_enable_set(1);
             ENCAP_RET_BUFFER("IREnableICC: OK");
             break;
+
         case IMT_DISABLE_INPUT_CC:
-            ir_printf(MODULE "-> IRDisableICC");
+            ir_printf(MODULE "-> Stop IR learning\n");
             ir_icc_enable_set(0);
             ENCAP_RET_BUFFER("IRDisableICC: OK");
             break;
+
         case IMT_DECODE:
-            ir_printf(MODULE "-> IRDecode");
+            ir_printf(MODULE "-> Receive IR signal\n");
             ir_msg_handle_decode(ret_buf, ret_len) ;
             break;
+
         case IMT_SEND_NEC:
-            ir_printf(MODULE "-> IRSendNEC");
+            ir_printf(MODULE "-> Send IR signal\n");
             ir_msg_handle_send(IR_NEC, rx_buf, rx_len);
             ENCAP_RET_BUFFER("IRSendNEC: OK");
             break;
+
         default:
+        	ir_printf(MODULE "-> Unknown IR msg type\n");
             break;
     }
     return 0;

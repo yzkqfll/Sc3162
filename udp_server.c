@@ -31,7 +31,7 @@ static int us_recv_data(struct udp_server *us)
 	inet_ntoa(us->peer_ip, addr.s_ip);
 	us->peer_port = addr.s_port;
 
-#ifdef DEBUG
+#ifdef DEBUG_SOCKET
 	{
 		int i;
 
@@ -60,7 +60,7 @@ static int us_send_data(struct udp_server *us)
 		addr.s_ip = inet_addr(us->peer_ip);
 		addr.s_port = us->peer_port;
 
-#ifdef DEBUG
+#ifdef DEBUG_SOCKET
 		if (us->tx_len < us->tx_buf_size) {
 			int i;
 
