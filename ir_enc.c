@@ -64,7 +64,7 @@ void ir_tx_om_set(unsigned char mode)
 }
 
 
-void nec_boot(TIM_TypeDef * TIMx)
+void nec_hdr(TIM_TypeDef * TIMx)
 {
     ir_tx_om_set(GPIO_MODE_PWM);
     TIM_Cmd(TIMx, ENABLE);
@@ -198,7 +198,7 @@ static void ir_send_nec(uint32_t data, uint32_t nbits)
     unsigned char i = 0;
 
     // send code
-    nec_boot(IR_TX_TIM);
+    nec_hdr(IR_TX_TIM);
 
     for(i = 1; i < nbits; i++) {
         if(data & TOPBIT) {
@@ -216,11 +216,11 @@ void ir_send(uint8_t type, uint32_t data, uint32_t nbits)
 {
     switch(type) {
         case IR_NEC:
-            printf(MODULE "send nec data 0x%x, length %d\r\n", data, nbits);
+            printf(MODULE "Send NEC data 0x%x, length %d\r\n", data, nbits);
             ir_send_nec(data, nbits);
             break;
         default:
-            printf(MODULE "not support!\r\n");
+            printf(MODULE "Unknow IR protocol!\r\n");
             break;
     }
 }

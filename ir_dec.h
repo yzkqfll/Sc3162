@@ -18,13 +18,26 @@
 #define  IR_CODE_ONE        1
 #define  IR_CODE_INVALID    2
 
-// NEC pulse width
-#define NEC_BOOT_MAX  140
-#define NEC_BOOT_MIN  130
-#define NEC_H_MAX      27
-#define NEC_H_MIN      17
-#define NEC_L_MAX      16
-#define NEC_L_MIN       6
+// NEC protocol definition (unit:10us)
+#define NEC_HDR_MARK	900UL
+#define NEC_HDR_SPACE	450UL
+#define NEC_BIT_MARK	56UL
+#define NEC_ONE_SPACE	169UL
+#define NEC_ZERO_SPACE	56UL
+#define NEC_RPT_SPACE	225UL
+
+#define NEC_HDR  (NEC_HDR_MARK + NEC_HDR_SPACE)
+#define NEC_ONE  (NEC_BIT_MARK + NEC_ONE_SPACE)
+#define NEC_ZERO (NEC_BIT_MARK + NEC_ZERO_SPACE)
+
+// NEC pulse width range measured (unit:10us)
+#define NEC_EXCESS    30UL
+#define NEC_HDR_MAX   (NEC_HDR + NEC_EXCESS)
+#define NEC_HDR_MIN   (NEC_HDR - NEC_EXCESS)
+#define NEC_ONE_MAX   (NEC_ONE + NEC_EXCESS)
+#define NEC_ONE_MIN   (NEC_ONE - NEC_EXCESS)
+#define NEC_ZERO_MAX  (NEC_ZERO + NEC_EXCESS)
+#define NEC_ZERO_MIN  (NEC_ZERO - NEC_EXCESS)
 
 // IR decode state
 #define  IR_STATE_NO        0
@@ -73,9 +86,9 @@ typedef struct {
 #define IR_RX_TIM_CLK RCC_APB2Periph_TIM8
 #define IR_RX_TIM_IT  TIM_IT_CC1
 
-#define IR_RX_TIM_TBPSC    (12000 - 1) //120M/psc => min=0.1ms
+#define IR_RX_TIM_TBPSC    (1200 - 1) //120M/psc => min=10us
 #define IR_RX_TIM_TBCNTM   TIM_CounterMode_Up
-#define IR_RX_TIM_TBPERIOD 2000          //max=0.1ms * 2000 = 200
+#define IR_RX_TIM_TBPERIOD 2000          //max=0.01ms * 2000 = 20ms
 #define IR_RX_TIM_TBCLK    TIM_CKD_DIV1
 #define IR_RX_TIM_TBREP    0
 

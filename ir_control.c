@@ -32,6 +32,16 @@ enum {
 
 static IR_DecResult idr;
 
+char *ir_get_type_name(uint8_t type)
+{
+    switch(type) {
+        case IR_NEC:
+            return "NEC";
+        default:
+            return "Unknow";
+    }
+}
+
 void ir_msg_handle_decode(char *ret_buf, int *ret_len)
 {
     char val[8] = {0};
@@ -39,6 +49,9 @@ void ir_msg_handle_decode(char *ret_buf, int *ret_len)
 
     res = ir_decode(&idr);
     if(res == 1) {
+
+        printf(MODULE "Decoded succeed : protocol=%s, data=0x%x, length=%d \r\n",
+               ir_get_type_name(idr.type), idr.value, idr.bits);
 
         ir_raw_data_print(&idr);
         ir_icc_enable_set(0);
@@ -102,7 +115,7 @@ int ir_msg_handle(unsigned char ir_msg_type, char *rx_buf, int rx_len, char *ret
             break;
 
         default:
-        	ir_printf(MODULE "-> Unknown IR msg type\n");
+            ir_printf(MODULE "-> Unknown IR msg type\n");
             break;
     }
     return 0;

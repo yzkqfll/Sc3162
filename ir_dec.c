@@ -181,17 +181,17 @@ uint32_t ir_decode_nec(IR_DecResult *result)
     uint8_t i = 0;
     uint32_t data = 0;
 
-    if ((result->rawBuf[i] > NEC_BOOT_MIN) && (result->rawBuf[i] < NEC_BOOT_MAX)) {
+    if ((result->rawBuf[i] > NEC_HDR_MIN) && (result->rawBuf[i] < NEC_HDR_MAX)) {
 
         if(result->rawLen <  NEC_CODE_LEN) {
-            printf(MODULE "header is NEC, but raw data length(%d) is not right!!!\r\n", result->rawLen);
+            printf(MODULE "Header is NEC, but pulse count is not enough(count:%d) is not right!!!\r\n", result->rawLen);
             return 0; //not possible
         }
 
         for (i = 1; i < NEC_CODE_LEN; i++) {
-            if(result->rawBuf[i] > NEC_H_MIN && result->rawBuf[i] < NEC_H_MAX) {
+            if(result->rawBuf[i] > NEC_ONE_MIN && result->rawBuf[i] < NEC_ONE_MAX) {
                 data = (data << 1) | 1;
-            } else if (result->rawBuf[i] > NEC_L_MIN && result->rawBuf[i] < NEC_L_MAX) {
+            } else if (result->rawBuf[i] > NEC_ZERO_MIN && result->rawBuf[i] < NEC_ZERO_MAX) {
                 data <<= 1;
             }
         }
@@ -216,7 +216,7 @@ int ir_decode(IR_DecResult *result)
     if(ir_int_info.state != IR_STATE_OK)
         return -1;
 
-    printf(MODULE "ir_int_info state is ok, rawHeader=%d rawLen=%d\r\n",
+    printf(MODULE "Signal is captured: header width=%d, pulse count=%d\r\n",
            ir_int_info.rawBuf[0], ir_int_info.rawLen);
 
     result->rawBuf = ir_int_info.rawBuf;
@@ -246,7 +246,7 @@ void ir_raw_data_print(IR_DecResult *result)
 {
     int i;
 
-    printf("\r\n");
+    printf(MODULE "Raw data beg : \r\n");
     printf(MODULE "Raw head is %d\r\n", result->rawBuf[0]);
     printf(MODULE "Raw buffer length is %d\r\n", result->rawLen);
     printf(MODULE "Raw user info:\r\n");
@@ -255,7 +255,9 @@ void ir_raw_data_print(IR_DecResult *result)
         if(i % 8 == 0)
             printf("\r\n");
     }
-    printf("\r\n");
+    printf(MODULE "Raw data end . \r\n");
+
+
 }
 
 /*********************************END OF FILE**********************************/
