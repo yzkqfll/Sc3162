@@ -9,6 +9,7 @@
 
 #define MODULE "[ir send] "
 
+#define DEBUG_POWER
 
 #ifndef CONFIG_MXCHIPWNET
 static __IO uint32_t TimingDelay;
@@ -63,6 +64,28 @@ void ir_tx_om_set(unsigned char mode)
     }
 }
 
+/*
+ * 3162.Pin3 - f205.PA13
+ * 3162.Pin5 - f205.PA3
+ */
+#ifdef DEBUG_POWER
+static void ir_tx_power_on(void)
+{
+    GPIO_InitTypeDef  GPIO_InitStructure;
+    uint32_t pvcc = GPIO_Pin_13;
+    uint32_t pgnd = GPIO_Pin_3;
+
+    GPIO_InitStructure.GPIO_Pin   = pvcc | pgnd;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    GPIO_SetBits(GPIOA, pvcc);
+    GPIO_ResetBits(GPIOA, pgnd);
+}
+#endif
 
 void nec_hdr(TIM_TypeDef * TIMx)
 {
@@ -187,6 +210,9 @@ void ir_tx_config(void)
 #endif
     ir_tx_rcc_config();
     ir_tx_gpio_config();
+#ifdef DEBUG_POWER
+    ir_tx_power_on();
+#endif
     ir_tx_tim_config(38); //enable 38khz
 }
 

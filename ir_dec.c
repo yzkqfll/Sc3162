@@ -10,6 +10,8 @@
 // variables in this file
 static IR_IntInfo ir_int_info;
 
+#define DEBUG_POWER
+
 static void ir_rx_gpio_config(void)
 {
     GPIO_InitTypeDef    GPIO_InitStructure;
@@ -27,6 +29,26 @@ static void ir_rx_gpio_config(void)
     // Connect TIM pins to AF
     GPIO_PinAFConfig(IR_RX_PORT_DAT, IR_RX_PIN_DATSRC, IR_RX_PIN_AF);
 }
+
+/*
+ * 3162.Pin12 - f205.PC2
+ */
+#ifdef DEBUG_POWER
+static void ir_rx_power_on(void)
+{
+    GPIO_InitTypeDef  GPIO_InitStructure;
+    uint32_t pvcc = GPIO_Pin_2;
+
+    GPIO_InitStructure.GPIO_Pin   = pvcc;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+    GPIO_SetBits(GPIOC, pvcc);
+}
+#endif
 
 void ir_icc_enable_set(int tof)
 {
@@ -168,6 +190,9 @@ void ir_rx_config(void)
 {
     ir_rx_state_init();
     ir_rx_gpio_config();
+#ifdef DEBUG_POWER
+    ir_rx_power_on();
+#endif
     ir_rx_nvic_config();
     ir_rx_tim_config();
 }
