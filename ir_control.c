@@ -72,14 +72,24 @@ void ir_msg_handle_decode(char *ret_buf, int *ret_len)
     }
 }
 
-void ir_msg_handle_send(int code_type, char *rx_buf, int rx_len)
+void ir_msg_handle_send(int code_type, char *rx_buf, int rx_len, char *ret_buf, int *ret_len)
 {
     unsigned int data = 0;
     unsigned int nbits = (unsigned int)(rx_len * 4);
+    char *sval = NULL;
 
-    data = strtoul(rx_buf, NULL, 16);
+    sval = (char *)malloc(rx_len+1);
+    if(sval == NULL) {
+	ir_printf(MODULE "alloc memory failed\r\n");
+	ENCAP_RET_BUFFER("IRSendNEC: NOMEM");
+	return;
+    }
+
+    data = strtoul(strncpy((char *)sval, rx_buf, rx_len), NULL, 16);
+    free(sval);
 
     ir_send(code_type, data, nbits);
+    ENCAP_RET_BUFFER("IRSendNEC: OK");
 }
 
 
@@ -109,9 +119,8 @@ int ir_msg_handle(unsigned char ir_msg_type, char *rx_buf, int rx_len, char *ret
             break;
 
         case IMT_SEND_NEC:
-            ir_printf(MODULE "-> Send IR signal\n");
-            ir_msg_handle_send(IR_NEC, rx_buf, rx_len);
-            ENCAP_RET_BUFFER("IRSendNEC: OK");
+            ir_printf(MODULE "-> Send IR signal: 0x%s, len%d\n", rx_buf,rx_len);
+            ir_msg_handle_send(IR_NEC, rx_buf, rx_len, ret_buf, ret_len);
             break;
 
         default:
