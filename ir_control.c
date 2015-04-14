@@ -14,6 +14,8 @@
 
 #define MODULE "[ir control] "
 
+#define IR_CODE_MAX_LEN 50
+
 enum {
     IMT_CONNECT = 1,
     IMT_ENABLE_INPUT_CC,
@@ -76,17 +78,15 @@ void ir_msg_handle_send(int code_type, char *rx_buf, int rx_len, char *ret_buf, 
 {
     unsigned int data = 0;
     unsigned int nbits = (unsigned int)(rx_len * 4);
-    char *sval = NULL;
+    char val_buf[IR_CODE_MAX_LEN];
 
-    sval = (char *)malloc(rx_len+1);
-    if(sval == NULL) {
-	ir_printf(MODULE "alloc memory failed\r\n");
-	ENCAP_RET_BUFFER("IRSendNEC: NOMEM");
+    if (rx_len > IR_CODE_MAX_LEN) {
+	ir_printf(MODULE "big rx buff\r\n");
+	ENCAP_RET_BUFFER("IRSendNEC: EBIGBUF");
 	return;
     }
 
-    data = strtoul(strncpy((char *)sval, rx_buf, rx_len), NULL, 16);
-    free(sval);
+    data = strtoul(strncpy((char *)val_buf, rx_buf, rx_len), NULL, 16);
 
     ir_send(code_type, data, nbits);
     ENCAP_RET_BUFFER("IRSendNEC: OK");
